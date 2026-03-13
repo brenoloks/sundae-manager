@@ -32,8 +32,11 @@ export default function Login() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
-        if (roles?.some(r => r.role === "super_admin")) {
+        const userRole = roles?.[0]?.role;
+        if (userRole === "super_admin") {
           navigate("/admin");
+        } else if (userRole === "owner") {
+          navigate("/owner");
         } else {
           navigate("/dashboard");
         }
