@@ -173,6 +173,8 @@ export default function PDV() {
         </DialogContent>
       </Dialog>
 
+      <ReceiptDialog open={receiptOpen} onOpenChange={setReceiptOpen} data={receiptData} />
+
       <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
         <DialogContent><DialogHeader><DialogTitle>Finalizar Venda</DialogTitle><DialogDescription>Total: R$ {total.toFixed(2)}</DialogDescription></DialogHeader>
           <div className="space-y-4 mt-4">
