@@ -2,7 +2,7 @@ import { useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, ShoppingCart, Package, Users, Receipt,
-  BarChart3, DollarSign, ChevronLeft, ChevronRight, IceCream2, LogOut, Settings
+  BarChart3, DollarSign, ChevronLeft, ChevronRight, IceCream2, LogOut, Settings, Warehouse
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,6 +15,7 @@ const navItems = [
   { to: "/cash-register", icon: DollarSign, label: "Caixa" },
   { to: "/sales", icon: Receipt, label: "Vendas" },
   { to: "/reports", icon: BarChart3, label: "Relatórios" },
+  { to: "/inventory", icon: Warehouse, label: "Estoque" },
   { to: "/users", icon: Users, label: "Usuários" },
   { to: "/settings", icon: Settings, label: "Configurações" },
 ];
