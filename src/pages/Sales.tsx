@@ -5,7 +5,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Search } from "lucide-react";
+import { Search, Receipt } from "lucide-react";
+import ReceiptDialog from "@/components/ReceiptDialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
