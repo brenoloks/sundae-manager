@@ -21,6 +21,7 @@ import AdminTenants from "@/pages/admin/AdminTenants";
 import AdminPlans from "@/pages/admin/AdminPlans";
 import AdminSubscriptions from "@/pages/admin/AdminSubscriptions";
 import AdminUsers from "@/pages/admin/AdminUsers";
+import SetupAdmin from "@/pages/SetupAdmin";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
