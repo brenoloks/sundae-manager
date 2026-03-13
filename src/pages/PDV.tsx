@@ -39,6 +39,8 @@ export default function PDV() {
   const [weightProduct, setWeightProduct] = useState<Product | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [receiptData, setReceiptData] = useState<any>(null);
+  const [receiptOpen, setReceiptOpen] = useState(false);
   const tenantId = profile?.tenant_id;
 
   useEffect(() => {
