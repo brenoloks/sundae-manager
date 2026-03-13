@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import AdminLayout from "@/components/layout/AdminLayout";
+import OwnerLayout from "@/components/layout/OwnerLayout";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import PDV from "@/pages/PDV";
@@ -23,6 +24,8 @@ import AdminSubscriptions from "@/pages/admin/AdminSubscriptions";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminStores from "@/pages/admin/AdminStores";
 import SetupAdmin from "@/pages/SetupAdmin";
+import OwnerDashboard from "@/pages/owner/OwnerDashboard";
+import OwnerStores from "@/pages/owner/OwnerStores";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +60,12 @@ const App = () => (
               <Route path="/admin/plans" element={<AdminPlans />} />
               <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
               <Route path="/admin/users" element={<AdminUsers />} />
+            </Route>
+
+            {/* Owner routes */}
+            <Route element={<ProtectedRoute requiredRole="owner"><OwnerLayout /></ProtectedRoute>}>
+              <Route path="/owner" element={<OwnerDashboard />} />
+              <Route path="/owner/stores" element={<OwnerStores />} />
             </Route>
 
             <Route path="/setup" element={<SetupAdmin />} />
