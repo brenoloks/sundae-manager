@@ -28,8 +28,16 @@ export default function Login() {
     if (error) {
       toast.error("Credenciais inválidas");
     } else {
-      // Role check will redirect appropriately
-      navigate("/dashboard");
+      // Check role to redirect appropriately
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+        if (roles?.some(r => r.role === "super_admin")) {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
+      }
     }
   };
 
