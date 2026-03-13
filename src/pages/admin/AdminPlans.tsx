@@ -21,12 +21,13 @@ interface Plan {
   is_active: boolean;
 }
 
+const emptyForm = { name: "", description: "", price_monthly: "", price_yearly: "", max_users: "5", max_products: "100" };
+
 export default function AdminPlans() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({
-    name: "", description: "", price_monthly: "", price_yearly: "", max_users: "5", max_products: "100"
-  });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState(emptyForm);
 
   const fetchPlans = async () => {
     const { data } = await supabase.from("plans").select("*").order("price_monthly");
@@ -35,23 +36,50 @@ export default function AdminPlans() {
 
   useEffect(() => { fetchPlans(); }, []);
 
-  const handleCreate = async () => {
+  const openCreate = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setDialogOpen(true);
+  };
+
+  const openEdit = (plan: Plan) => {
+    setEditingId(plan.id);
+    setForm({
+      name: plan.name,
+      description: plan.description || "",
+      price_monthly: String(plan.price_monthly),
+      price_yearly: String(plan.price_yearly),
+      max_users: String(plan.max_users),
+      max_products: String(plan.max_products),
+    });
+    setDialogOpen(true);
+  };
+
+  const handleSave = async () => {
     if (!form.name) { toast.error("Nome é obrigatório"); return; }
-    const { error } = await supabase.from("plans").insert({
+    const payload = {
       name: form.name,
       description: form.description || null,
       price_monthly: parseFloat(form.price_monthly) || 0,
       price_yearly: parseFloat(form.price_yearly) || 0,
       max_users: parseInt(form.max_users) || 5,
       max_products: parseInt(form.max_products) || 100,
-    });
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Plano criado!");
-      setDialogOpen(false);
-      setForm({ name: "", description: "", price_monthly: "", price_yearly: "", max_users: "5", max_products: "100" });
-      fetchPlans();
+    };
+
+    if (editingId) {
+      const { error } = await supabase.from("plans").update(payload).eq("id", editingId);
+      if (error) toast.error(error.message);
+      else toast.success("Plano atualizado!");
+    } else {
+      const { error } = await supabase.from("plans").insert(payload);
+      if (error) toast.error(error.message);
+      else toast.success("Plano criado!");
     }
+
+    setDialogOpen(false);
+    setEditingId(null);
+    setForm(emptyForm);
+    fetchPlans();
   };
 
   const handleDelete = async (id: string) => {
@@ -69,10 +97,10 @@ export default function AdminPlans() {
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 mr-2" />Novo Plano</Button>
+            <Button onClick={openCreate}><Plus className="w-4 h-4 mr-2" />Novo Plano</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Novo Plano</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{editingId ? "Editar Plano" : "Novo Plano"}</DialogTitle></DialogHeader>
             <div className="space-y-4 mt-4">
               <div><Label>Nome</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Básico" /></div>
               <div><Label>Descrição</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Ideal para pequenas sorveterias" /></div>
@@ -84,7 +112,7 @@ export default function AdminPlans() {
                 <div><Label>Máx. Usuários</Label><Input type="number" value={form.max_users} onChange={(e) => setForm({ ...form, max_users: e.target.value })} /></div>
                 <div><Label>Máx. Produtos</Label><Input type="number" value={form.max_products} onChange={(e) => setForm({ ...form, max_products: e.target.value })} /></div>
               </div>
-              <Button onClick={handleCreate} className="w-full">Criar Plano</Button>
+              <Button onClick={handleSave} className="w-full">{editingId ? "Salvar Alterações" : "Criar Plano"}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -119,7 +147,7 @@ export default function AdminPlans() {
                   <div className="flex items-center gap-2"><Check className="w-4 h-4 text-primary" /><span>Até {plan.max_products} produtos</span></div>
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm"><Pencil className="w-3 h-3 mr-1" />Editar</Button>
+                  <Button variant="outline" size="sm" onClick={() => openEdit(plan)}><Pencil className="w-3 h-3 mr-1" />Editar</Button>
                   <Button variant="outline" size="sm" onClick={() => handleDelete(plan.id)}>
                     <Trash2 className="w-3 h-3 mr-1 text-destructive" />Remover
                   </Button>
