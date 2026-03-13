@@ -41,7 +41,7 @@ export default function Sales() {
         <Input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="w-auto" />
       </div>
       <div className="relative max-w-sm"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
-      <Card><CardContent className="p-0"><Table><TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Horário</TableHead><TableHead>Itens</TableHead><TableHead>Pagamento</TableHead><TableHead>Cliente</TableHead><TableHead className="text-right">Total</TableHead></TableRow></TableHeader>
+      <Card><CardContent className="p-0"><Table><TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Horário</TableHead><TableHead>Itens</TableHead><TableHead>Pagamento</TableHead><TableHead>Cliente</TableHead><TableHead className="text-right">Total</TableHead><TableHead></TableHead></TableRow></TableHeader>
         <TableBody>{filtered.map((o) => (
           <TableRow key={o.id}>
             <TableCell className="font-mono text-xs text-muted-foreground">#{o.id.slice(0, 6)}</TableCell>
