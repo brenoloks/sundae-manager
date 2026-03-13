@@ -22,7 +22,13 @@ const navItems = [
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
 
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
   return (
     <motion.aside
       animate={{ width: collapsed ? 72 : 260 }}
