@@ -10,7 +10,7 @@ import ReceiptDialog from "@/components/ReceiptDialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-interface Order { id: string; subtotal: number; discount: number; total: number; payment_method: string; customer_name: string | null; created_at: string; order_items: { product_name: string; quantity: number; total_price: number; weight_kg: number | null }[]; }
+interface Order { id: string; order_number?: number; subtotal: number; discount: number; total: number; payment_method: string; customer_name: string | null; created_at: string; order_items: { product_name: string; quantity: number; unit_price: number; total_price: number; weight_kg: number | null }[]; }
 const pmLabels: Record<string, string> = { dinheiro: "Dinheiro", pix: "PIX", credito: "Crédito", debito: "Débito" };
 
 export default function Sales() {
