@@ -57,6 +57,7 @@ const App = () => (
               <Route path="/admin/users" element={<AdminUsers />} />
             </Route>
 
+            <Route path="/setup" element={<SetupAdmin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
