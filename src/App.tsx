@@ -17,6 +17,7 @@ import Sales from "@/pages/Sales";
 import Reports from "@/pages/Reports";
 import UsersPage from "@/pages/UsersPage";
 import SettingsPage from "@/pages/SettingsPage";
+import Inventory from "@/pages/Inventory";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminTenants from "@/pages/admin/AdminTenants";
 import AdminPlans from "@/pages/admin/AdminPlans";
