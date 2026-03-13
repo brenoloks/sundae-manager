@@ -26,6 +26,7 @@ import AdminStores from "@/pages/admin/AdminStores";
 import SetupAdmin from "@/pages/SetupAdmin";
 import OwnerDashboard from "@/pages/owner/OwnerDashboard";
 import OwnerStores from "@/pages/owner/OwnerStores";
+import OwnerUsers from "@/pages/owner/OwnerUsers";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +67,7 @@ const App = () => (
             <Route element={<ProtectedRoute requiredRole="owner"><OwnerLayout /></ProtectedRoute>}>
               <Route path="/owner" element={<OwnerDashboard />} />
               <Route path="/owner/stores" element={<OwnerStores />} />
+              <Route path="/owner/users" element={<OwnerUsers />} />
             </Route>
 
             <Route path="/setup" element={<SetupAdmin />} />
