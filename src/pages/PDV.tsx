@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import ReceiptDialog from "@/components/ReceiptDialog";
 
 interface Product { id: string; name: string; price: number; unit: string; price_per_kg: number; stock: number; is_active: boolean; category_id: string | null; categories: { name: string; color: string } | null; }
 interface CartItem { product: Product; quantity: number; weight_kg?: number; total: number; }
@@ -38,6 +39,8 @@ export default function PDV() {
   const [weightProduct, setWeightProduct] = useState<Product | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [receiptData, setReceiptData] = useState<any>(null);
+  const [receiptOpen, setReceiptOpen] = useState(false);
   const tenantId = profile?.tenant_id;
 
   useEffect(() => {
@@ -98,6 +101,12 @@ export default function PDV() {
       const { error: itemsError } = await supabase.from("order_items").insert(items);
       if (itemsError) throw itemsError;
       for (const item of cart) { if (item.product.unit !== "kg") { await supabase.from("products").update({ stock: Math.max(0, item.product.stock - item.quantity) }).eq("id", item.product.id); } }
+      setReceiptData({
+        id: order.id, created_at: new Date().toISOString(), subtotal, discount: discountValue, total,
+        payment_method: paymentMethod, customer_name: customerName || null,
+        items: items.map((it: any) => ({ product_name: it.product_name, quantity: it.quantity, unit_price: it.unit_price, total_price: it.total_price, weight_kg: it.weight_kg })),
+      });
+      setReceiptOpen(true);
       toast.success(`Venda finalizada! Total: R$ ${total.toFixed(2)}`);
       setCart([]); setDiscount(""); setCustomerName(""); setCheckoutOpen(false);
       const { data: updated } = await supabase.from("products").select("*, categories(name, color)").eq("tenant_id", tenantId).eq("is_active", true).order("name");
@@ -163,6 +172,8 @@ export default function PDV() {
             <Button onClick={addWeightItem} className="w-full">Adicionar</Button></div>
         </DialogContent>
       </Dialog>
+
+      <ReceiptDialog open={receiptOpen} onOpenChange={setReceiptOpen} data={receiptData} />
 
       <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
         <DialogContent><DialogHeader><DialogTitle>Finalizar Venda</DialogTitle><DialogDescription>Total: R$ {total.toFixed(2)}</DialogDescription></DialogHeader>

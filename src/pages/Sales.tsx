@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Search } from "lucide-react";
+import { Search, Receipt } from "lucide-react";
+import ReceiptDialog from "@/components/ReceiptDialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-interface Order { id: string; subtotal: number; discount: number; total: number; payment_method: string; customer_name: string | null; created_at: string; order_items: { product_name: string; quantity: number; total_price: number; weight_kg: number | null }[]; }
+interface Order { id: string; order_number?: number; subtotal: number; discount: number; total: number; payment_method: string; customer_name: string | null; created_at: string; order_items: { product_name: string; quantity: number; unit_price: number; total_price: number; weight_kg: number | null }[]; }
 const pmLabels: Record<string, string> = { dinheiro: "Dinheiro", pix: "PIX", credito: "Crédito", debito: "Débito" };
 
 export default function Sales() {
@@ -18,12 +20,13 @@ export default function Sales() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
   const tenantId = profile?.tenant_id;
 
   useEffect(() => {
     if (!tenantId) return;
     const fetchOrders = async () => {
-      const { data } = await supabase.from("orders").select("*, order_items(product_name, quantity, total_price, weight_kg)").eq("tenant_id", tenantId).gte("created_at", `${dateFilter}T00:00:00`).lte("created_at", `${dateFilter}T23:59:59`).order("created_at", { ascending: false });
+      const { data } = await supabase.from("orders").select("*, order_items(product_name, quantity, unit_price, total_price, weight_kg)").eq("tenant_id", tenantId).gte("created_at", `${dateFilter}T00:00:00`).lte("created_at", `${dateFilter}T23:59:59`).order("created_at", { ascending: false });
       setOrders((data as any) || []); setLoading(false);
     };
     fetchOrders();
@@ -39,7 +42,7 @@ export default function Sales() {
         <Input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="w-auto" />
       </div>
       <div className="relative max-w-sm"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
-      <Card><CardContent className="p-0"><Table><TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Horário</TableHead><TableHead>Itens</TableHead><TableHead>Pagamento</TableHead><TableHead>Cliente</TableHead><TableHead className="text-right">Total</TableHead></TableRow></TableHeader>
+      <Card><CardContent className="p-0"><Table><TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Horário</TableHead><TableHead>Itens</TableHead><TableHead>Pagamento</TableHead><TableHead>Cliente</TableHead><TableHead className="text-right">Total</TableHead><TableHead></TableHead></TableRow></TableHeader>
         <TableBody>{filtered.map((o) => (
           <TableRow key={o.id}>
             <TableCell className="font-mono text-xs text-muted-foreground">#{o.id.slice(0, 6)}</TableCell>
@@ -48,9 +51,26 @@ export default function Sales() {
             <TableCell><Badge variant="outline">{pmLabels[o.payment_method] || o.payment_method}</Badge></TableCell>
             <TableCell className="text-muted-foreground">{o.customer_name || "—"}</TableCell>
             <TableCell className="text-right font-semibold">R$ {Number(o.total).toFixed(2)}</TableCell>
+            <TableCell><Button variant="ghost" size="icon" onClick={() => setReceiptOrder(o)} title="Ver recibo"><Receipt className="w-4 h-4" /></Button></TableCell>
           </TableRow>
-        ))}{filtered.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">{loading ? "Carregando..." : "Nenhuma venda encontrada"}</TableCell></TableRow>}</TableBody>
+        ))}{filtered.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">{loading ? "Carregando..." : "Nenhuma venda encontrada"}</TableCell></TableRow>}</TableBody>
       </Table></CardContent></Card>
+
+      <ReceiptDialog
+        open={!!receiptOrder}
+        onOpenChange={(o) => !o && setReceiptOrder(null)}
+        data={receiptOrder ? {
+          id: receiptOrder.id,
+          order_number: receiptOrder.order_number,
+          created_at: receiptOrder.created_at,
+          subtotal: receiptOrder.subtotal,
+          discount: receiptOrder.discount,
+          total: receiptOrder.total,
+          payment_method: receiptOrder.payment_method,
+          customer_name: receiptOrder.customer_name,
+          items: receiptOrder.order_items.map(i => ({ product_name: i.product_name, quantity: i.quantity, unit_price: i.unit_price, total_price: i.total_price, weight_kg: i.weight_kg })),
+        } : null}
+      />
     </div>
   );
 }
