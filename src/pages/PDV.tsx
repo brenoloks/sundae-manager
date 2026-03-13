@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import ReceiptDialog from "@/components/ReceiptDialog";
 
 interface Product { id: string; name: string; price: number; unit: string; price_per_kg: number; stock: number; is_active: boolean; category_id: string | null; categories: { name: string; color: string } | null; }
 interface CartItem { product: Product; quantity: number; weight_kg?: number; total: number; }
