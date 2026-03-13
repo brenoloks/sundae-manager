@@ -26,6 +26,7 @@ import AdminStores from "@/pages/admin/AdminStores";
 import SetupAdmin from "@/pages/SetupAdmin";
 import OwnerDashboard from "@/pages/owner/OwnerDashboard";
 import OwnerStores from "@/pages/owner/OwnerStores";
+import OwnerUsers from "@/pages/owner/OwnerUsers";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
