@@ -4,7 +4,9 @@ import { Separator } from "@/components/ui/separator";
 import { Printer, X } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ReceiptItem {
   product_name: string;
@@ -28,6 +30,20 @@ interface ReceiptData {
   store_name?: string;
 }
 
+interface PrintSettings {
+  showLogo: boolean;
+  storeName: boolean;
+  footerText: string;
+  paperWidth: string;
+}
+
+const DEFAULT_PRINT: PrintSettings = {
+  showLogo: true,
+  storeName: true,
+  footerText: "Obrigado pela preferência!",
+  paperWidth: "80mm",
+};
+
 const pmLabels: Record<string, string> = {
   dinheiro: "Dinheiro",
   pix: "PIX",
@@ -45,14 +61,30 @@ export default function ReceiptDialog({
   data: ReceiptData | null;
 }) {
   const receiptRef = useRef<HTMLDivElement>(null);
+  const { profile } = useAuth();
+  const [tenantInfo, setTenantInfo] = useState<{ name: string; logo_url: string | null; cnpj: string | null; phone: string | null } | null>(null);
+  const [printSettings, setPrintSettings] = useState<PrintSettings>(DEFAULT_PRINT);
+
+  useEffect(() => {
+    if (!open || !profile?.tenant_id) return;
+    const fetchTenant = async () => {
+      const { data: t } = await supabase.from("tenants").select("name, logo_url, cnpj, phone").eq("id", profile.tenant_id!).single();
+      if (t) setTenantInfo(t as any);
+    };
+    fetchTenant();
+    const saved = localStorage.getItem(`print_settings_${profile.tenant_id}`);
+    if (saved) setPrintSettings(JSON.parse(saved));
+  }, [open, profile?.tenant_id]);
 
   if (!data) return null;
+
+  const paperWidth = printSettings.paperWidth === "58mm" ? 220 : 280;
 
   const handlePrint = () => {
     const content = receiptRef.current;
     if (!content) return;
 
-    const printWindow = window.open("", "_blank", "width=320,height=600");
+    const printWindow = window.open("", "_blank", `width=${paperWidth + 40},height=600`);
     if (!printWindow) return;
 
     printWindow.document.write(`
@@ -61,7 +93,7 @@ export default function ReceiptDialog({
           <title>Recibo #${data.order_number || data.id.slice(0, 6)}</title>
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Courier New', monospace; font-size: 12px; width: 280px; margin: 0 auto; padding: 8px; }
+            body { font-family: 'Courier New', monospace; font-size: 12px; width: ${paperWidth}px; margin: 0 auto; padding: 8px; }
             .center { text-align: center; }
             .right { text-align: right; }
             .bold { font-weight: bold; }
@@ -70,7 +102,8 @@ export default function ReceiptDialog({
             .item { margin: 2px 0; }
             .header { margin-bottom: 8px; }
             .footer { margin-top: 8px; font-size: 10px; }
-            @media print { @page { margin: 0; size: 80mm auto; } }
+            .logo { max-width: 80px; max-height: 50px; margin: 0 auto 4px; display: block; }
+            @media print { @page { margin: 0; size: ${printSettings.paperWidth} auto; } }
           </style>
         </head>
         <body>
@@ -83,22 +116,26 @@ export default function ReceiptDialog({
   };
 
   const dateStr = format(new Date(data.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR });
+  const displayName = data.tenant_name || tenantInfo?.name;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            Comprovante de Venda
-          </DialogTitle>
+          <DialogTitle>Comprovante de Venda</DialogTitle>
         </DialogHeader>
 
-        {/* Visual receipt preview */}
         <div className="bg-white text-black rounded-lg p-4 font-mono text-xs space-y-2 border shadow-inner max-h-[60vh] overflow-y-auto">
           <div ref={receiptRef}>
             <div className="center header">
-              {data.tenant_name && <p className="bold" style={{ fontSize: 14, textAlign: "center" }}>{data.tenant_name}</p>}
-              {data.store_name && <p style={{ textAlign: "center" }}>{data.store_name}</p>}
+              {printSettings.showLogo && tenantInfo?.logo_url && (
+                <img src={tenantInfo.logo_url} alt="Logo" className="logo" style={{ maxWidth: 80, maxHeight: 50, margin: "0 auto 4px", display: "block" }} />
+              )}
+              {printSettings.storeName && displayName && (
+                <p className="bold" style={{ fontSize: 14, textAlign: "center" }}>{displayName}</p>
+              )}
+              {tenantInfo?.cnpj && <p style={{ textAlign: "center", fontSize: 10 }}>CNPJ: {tenantInfo.cnpj}</p>}
+              {tenantInfo?.phone && <p style={{ textAlign: "center", fontSize: 10 }}>Tel: {tenantInfo.phone}</p>}
               <div className="line" />
               <p style={{ textAlign: "center", fontWeight: "bold" }}>COMPROVANTE DE VENDA</p>
               <p style={{ textAlign: "center" }}>#{data.order_number || data.id.slice(0, 8)}</p>
@@ -123,7 +160,6 @@ export default function ReceiptDialog({
             </div>
 
             <div className="line" />
-
             <div className="row"><span>Subtotal</span><span>R$ {data.subtotal.toFixed(2)}</span></div>
             {data.discount > 0 && (
               <div className="row"><span>Desconto</span><span>-R$ {data.discount.toFixed(2)}</span></div>
@@ -139,7 +175,7 @@ export default function ReceiptDialog({
 
             <div className="footer center">
               <div className="line" />
-              <p style={{ textAlign: "center", marginTop: 6 }}>Obrigado pela preferência!</p>
+              <p style={{ textAlign: "center", marginTop: 6 }}>{printSettings.footerText}</p>
             </div>
           </div>
         </div>
