@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import {
   LayoutDashboard, Building2, CreditCard, Users, LogOut,
-  ChevronLeft, ChevronRight, Shield
+  ChevronLeft, ChevronRight, Shield, Store
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const navItems = [
   { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/admin/tenants", icon: Building2, label: "Sorveterias" },
+  { to: "/admin/stores", icon: Store, label: "Lojas" },
   { to: "/admin/plans", icon: CreditCard, label: "Planos" },
   { to: "/admin/subscriptions", icon: CreditCard, label: "Assinaturas" },
   { to: "/admin/users", icon: Users, label: "Usuários" },

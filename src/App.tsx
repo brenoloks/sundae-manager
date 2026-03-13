@@ -21,6 +21,7 @@ import AdminTenants from "@/pages/admin/AdminTenants";
 import AdminPlans from "@/pages/admin/AdminPlans";
 import AdminSubscriptions from "@/pages/admin/AdminSubscriptions";
 import AdminUsers from "@/pages/admin/AdminUsers";
+import AdminStores from "@/pages/admin/AdminStores";
 import SetupAdmin from "@/pages/SetupAdmin";
 import NotFound from "@/pages/NotFound";
 
@@ -52,6 +53,7 @@ const App = () => (
             <Route element={<ProtectedRoute requiredRole="super_admin"><AdminLayout /></ProtectedRoute>}>
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/tenants" element={<AdminTenants />} />
+              <Route path="/admin/stores" element={<AdminStores />} />
               <Route path="/admin/plans" element={<AdminPlans />} />
               <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
               <Route path="/admin/users" element={<AdminUsers />} />
