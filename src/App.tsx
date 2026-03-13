@@ -67,6 +67,7 @@ const App = () => (
             <Route element={<ProtectedRoute requiredRole="owner"><OwnerLayout /></ProtectedRoute>}>
               <Route path="/owner" element={<OwnerDashboard />} />
               <Route path="/owner/stores" element={<OwnerStores />} />
+              <Route path="/owner/users" element={<OwnerUsers />} />
             </Route>
 
             <Route path="/setup" element={<SetupAdmin />} />
