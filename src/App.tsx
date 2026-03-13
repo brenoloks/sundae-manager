@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import AdminLayout from "@/components/layout/AdminLayout";
+import OwnerLayout from "@/components/layout/OwnerLayout";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import PDV from "@/pages/PDV";
