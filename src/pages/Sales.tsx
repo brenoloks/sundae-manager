@@ -19,6 +19,7 @@ export default function Sales() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
   const tenantId = profile?.tenant_id;
 
   useEffect(() => {
