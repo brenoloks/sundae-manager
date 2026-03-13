@@ -4,16 +4,32 @@ import { IceCream2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/dashboard");
+    if (!email || !password) {
+      toast.error("Preencha e-mail e senha");
+      return;
+    }
+    setLoading(true);
+    const { error } = await signIn(email, password);
+    setLoading(false);
+    if (error) {
+      toast.error("Credenciais inválidas");
+    } else {
+      // Role check will redirect appropriately
+      navigate("/dashboard");
+    }
   };
 
   return (
@@ -105,8 +121,8 @@ export default function Login() {
               </label>
               <a href="#" className="text-primary font-medium hover:underline">Esqueci a senha</a>
             </div>
-            <Button type="submit" className="w-full h-11 text-base font-semibold">
-              Entrar
+            <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={loading}>
+              {loading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
 
