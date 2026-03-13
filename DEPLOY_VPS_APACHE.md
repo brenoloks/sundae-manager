@@ -1,227 +1,123 @@
 # Gelatech PDV - Deploy VPS com Apache
 
-## 📋 Visão Geral
+## Resumo
 
-Este guia configura o deploy do Gelatech PDV em VPS própria com:
-- **Domínio:** `gelatech.axissistemas.com.br`
-- **API:** `api.gelatech.axissistemas.com.br`
-- **Web Server:** Apache
-- **Backend:** Supabase Self-Hosted (Docker)
+| Item | Valor |
+|------|-------|
+| Frontend | `gelatech.axissistemas.com.br` |
+| API | `api.gelatech.axissistemas.com.br` |
+| Pasta VPS | `/var/www/gelatech.axissistemas` |
+| Web Server | Apache |
+| Backend | Supabase Self-Hosted (Docker) |
 
-## 🌐 DNS - Configuração Necessária
-
-Adicione estes registros A no seu DNS (Registro.br ou provedor):
+## 1. DNS (Registro.br)
 
 ```
-Tipo  Nome                           Valor
-A     gelatech.axissistemas.com.br   SEU_IP_DA_VPS
-A     api.gelatech.axissistemas.com.br SEU_IP_DA_VPS
+Tipo  Nome                                Valor
+A     gelatech.axissistemas.com.br        IP_DA_VPS
+A     api.gelatech.axissistemas.com.br    IP_DA_VPS
 ```
 
-## 🚀 Deploy Rápido (Copiar e Colar)
-
-### 1. Copiar Script para VPS
+## 2. Deploy Rápido
 
 ```bash
-# Na sua máquina local, envie o script para a VPS
-scp deploy-vps-apache.sh root@SEU_IP:/root/
-```
+# Enviar script para VPS
+scp deploy-vps-apache.sh root@IP_DA_VPS:/root/
 
-### 2. Executar na VPS
-
-```bash
-# Acesse a VPS
-ssh root@SEU_IP
-
-# Torne executável e rode
+# Na VPS
+ssh root@IP_DA_VPS
 chmod +x deploy-vps-apache.sh
 ./deploy-vps-apache.sh
 ```
 
-### 3. Deploy do Frontend
+## 3. Gerar Chaves JWT
 
+Acesse https://supabase.com/docs/guides/self-hosting#api-keys
+
+Use o `JWT_SECRET` que o script gerou para criar:
+- `ANON_KEY`
+- `SERVICE_ROLE_KEY`
+
+Edite o `.env` do Supabase:
 ```bash
-# Na máquina local, faça o build
-npm run build
-
-# Envie para a VPS
-rsync -av --delete dist/ root@SEU_IP:/var/www/gelatech/dist/
+nano /opt/supabase/supabase/docker/.env
+# Preencha ANON_KEY e SERVICE_ROLE_KEY
 ```
 
-### 4. SSL (HTTPS)
-
-Após o DNS propagar (pode levar até 24h):
+## 4. Iniciar Supabase
 
 ```bash
-# Na VPS
-certbot --apache -d gelatech.axissistemas.com.br -d api.gelatech.axissistemas.com.br
-```
-
-## 🐳 Supabase na VPS
-
-### Clonar e Configurar
-
-```bash
-# Criar diretório
-mkdir -p /opt/supabase
-cd /opt/supabase
-
-# Clonar
-git clone https://github.com/supabase/supabase.git
-cd supabase/docker
-
-# Copiar configuração de exemplo
-cp .env.example .env
-```
-
-### Configurar .env do Supabase
-
-Edite o arquivo `.env` e altere:
-
-```env
-# POSTGRES
-POSTGRES_PASSWORD=sua-senha-forte-aqui
-
-# Auth/JWT
-JWT_SECRET=sua-jwt-secret-aleatoria-minimo-32-caracteres
-ANON_KEY=sua-anon-key-gerada
-SERVICE_ROLE_KEY=sua-service-role-key-gerada
-
-# URLs (use o IP da VPS temporariamente ou o domínio)
-SITE_URL=http://gelatech.axissistemas.com.br
-ADDITIONAL_REDIRECT_URLS=http://gelatech.axissistemas.com.br,https://gelatech.axissistemas.com.br
-
-# Desabilitar signup se quiser controle manual
-ENABLE_SIGNUP=true
-```
-
-### Gerar Chaves JWT
-
-```bash
-# Gerar JWT_SECRET (use o mesmo no .env)
-openssl rand -base64 32
-
-# Gerar ANON_KEY e SERVICE_ROLE_KEY
-# Acesse: https://supabase.com/docs/guides/self-hosting#generate-api-keys
-# Ou use o gerador online
-```
-
-### Iniciar Supabase
-
-```bash
-cd /opt/supabase/docker
+cd /opt/supabase/supabase/docker
 docker compose pull
 docker compose up -d
+docker compose ps  # verificar se tudo subiu
 ```
 
-### Verificar se está rodando
+## 5. Importar Schema do Banco
 
 ```bash
-docker compose ps
-curl http://localhost:8000/health
+# Copie o arquivo schema.sql para a VPS
+scp schema.sql root@IP_DA_VPS:/var/www/gelatech.axissistemas/
+
+# Na VPS, importe
+cd /opt/supabase/supabase/docker
+docker compose exec db psql -U supabase_admin -d postgres -f /var/www/gelatech.axissistemas/schema.sql
 ```
 
-## 🔄 Atualizar Frontend
-
-Sempre que fizer alterações no código:
+## 6. Deploy do Frontend
 
 ```bash
-# Local
+# Na máquina local
 npm run build
 
 # Enviar para VPS
-rsync -av --delete dist/ root@SEU_IP:/var/www/gelatech/dist/
+rsync -avz --delete dist/ root@IP_DA_VPS:/var/www/gelatech.axissistemas/dist/
 ```
 
-## 📊 Comandos Úteis
+## 7. SSL (após DNS propagar)
 
 ```bash
-# Ver logs Apache
-tail -f /var/www/gelatech/logs/error.log
-tail -f /var/www/gelatech/logs/api-error.log
+certbot --apache -d gelatech.axissistemas.com.br -d api.gelatech.axissistemas.com.br
+```
 
-# Reiniciar Apache
+## 8. Atualizar Frontend
+
+```bash
+npm run build
+rsync -avz --delete dist/ root@IP_DA_VPS:/var/www/gelatech.axissistemas/dist/
+```
+
+## Comandos Úteis
+
+```bash
+# Logs
+tail -f /var/www/gelatech.axissistemas/logs/error.log
+tail -f /var/www/gelatech.axissistemas/logs/api-error.log
+
+# Apache
 systemctl restart apache2
-
-# Ver status Supabase
-cd /opt/supabase/docker && docker compose ps
-
-# Reiniciar Supabase
-cd /opt/supabase/docker && docker compose restart
-
-# Ver logs Supabase
-cd /opt/supabase/docker && docker compose logs -f
-```
-
-## 🔒 Segurança
-
-```bash
-# Firewall - permitir apenas portas necessárias
-ufw allow 80/tcp
-ufw allow 443/tcp
-ufw allow 22/tcp  # SSH - restrinja ao seu IP se possível
-ufw enable
-
-# Verificar status
-ufw status
-```
-
-## 🆘 Troubleshooting
-
-### Apache não inicia
-```bash
 apache2ctl configtest
-journalctl -xe
+
+# Supabase
+cd /opt/supabase/supabase/docker
+docker compose ps
+docker compose restart
+docker compose logs -f
 ```
 
-### WebSocket não funciona (Realtime)
-```bash
-# Verificar se proxy_wstunnel está ativo
-a2enmod proxy_wstunnel
-systemctl restart apache2
-```
-
-### CORS erros
-Verifique se os headers estão configurados no VirtualHost da API.
-
-### SSL não funciona
-```bash
-# Renovar certificados
-certbot renew --dry-run
-
-# Verificar status
-certbot certificates
-```
-
-## 📁 Estrutura de Arquivos na VPS
+## Estrutura na VPS
 
 ```
-/var/www/gelatech/
-├── dist/                  # Frontend buildado
-├── logs/                  # Logs Apache
-│   ├── access.log
-│   ├── error.log
-│   ├── api-access.log
-│   └── api-error.log
+/var/www/gelatech.axissistemas/
+├── dist/          # Frontend build
+├── logs/          # Logs Apache
+└── schema.sql     # Schema do banco
+
+/opt/supabase/supabase/docker/
+├── docker-compose.yml
+└── .env
 
 /etc/apache2/sites-available/
-├── gelatech.conf         # Frontend VirtualHost
-└── gelatech-api.conf     # API VirtualHost
-
-/opt/supabase/
-└── docker/               # Supabase self-hosted
-    ├── docker-compose.yml
-    └── .env
+├── gelatech.conf       # Frontend
+└── gelatech-api.conf   # API Proxy
 ```
-
-## 🔗 URLs Finais
-
-| Serviço | URL |
-|---------|-----|
-| Frontend | https://gelatech.axissistemas.com.br |
-| API | https://api.gelatech.axissistemas.com.br |
-| Supabase Studio | http://SEU_IP:8000 (não expor publicamente!) |
-
----
-
-**Nota:** Mantenha o arquivo `.env.production` seguro e não o compartilhe publicamente.
