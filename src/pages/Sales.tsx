@@ -25,7 +25,7 @@ export default function Sales() {
   useEffect(() => {
     if (!tenantId) return;
     const fetchOrders = async () => {
-      const { data } = await supabase.from("orders").select("*, order_items(product_name, quantity, total_price, weight_kg)").eq("tenant_id", tenantId).gte("created_at", `${dateFilter}T00:00:00`).lte("created_at", `${dateFilter}T23:59:59`).order("created_at", { ascending: false });
+      const { data } = await supabase.from("orders").select("*, order_items(product_name, quantity, unit_price, total_price, weight_kg)").eq("tenant_id", tenantId).gte("created_at", `${dateFilter}T00:00:00`).lte("created_at", `${dateFilter}T23:59:59`).order("created_at", { ascending: false });
       setOrders((data as any) || []); setLoading(false);
     };
     fetchOrders();
