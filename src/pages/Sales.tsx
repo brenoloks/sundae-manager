@@ -1,91 +1,56 @@
-import { Search, Eye, Receipt, Calendar } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Search } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
-const sales = [
-  { id: 47, date: "13/03/2026 14:32", user: "Maria", items: 3, total: 42.0, payment: "PIX" },
-  { id: 46, date: "13/03/2026 14:15", user: "Maria", items: 2, total: 28.5, payment: "Dinheiro" },
-  { id: 45, date: "13/03/2026 12:48", user: "Maria", items: 5, total: 95.0, payment: "Cartão Créd." },
-  { id: 44, date: "13/03/2026 12:30", user: "João", items: 1, total: 18.0, payment: "PIX" },
-  { id: 43, date: "13/03/2026 11:45", user: "João", items: 4, total: 62.0, payment: "Cartão Déb." },
-  { id: 42, date: "13/03/2026 11:10", user: "Maria", items: 2, total: 36.0, payment: "Dinheiro" },
-  { id: 41, date: "13/03/2026 10:30", user: "João", items: 3, total: 54.0, payment: "PIX" },
-];
-
-const paymentColor: Record<string, string> = {
-  PIX: "bg-primary/10 text-primary",
-  Dinheiro: "bg-accent/10 text-accent",
-  "Cartão Créd.": "bg-secondary text-secondary-foreground",
-  "Cartão Déb.": "bg-muted text-muted-foreground",
-};
+interface Order { id: string; subtotal: number; discount: number; total: number; payment_method: string; customer_name: string | null; created_at: string; order_items: { product_name: string; quantity: number; total_price: number; weight_kg: number | null }[]; }
+const pmLabels: Record<string, string> = { dinheiro: "Dinheiro", pix: "PIX", credito: "Crédito", debito: "Débito" };
 
 export default function Sales() {
+  const { profile } = useAuth();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [dateFilter, setDateFilter] = useState(format(new Date(), "yyyy-MM-dd"));
+  const tenantId = profile?.tenant_id;
+
+  useEffect(() => {
+    if (!tenantId) return;
+    const fetchOrders = async () => {
+      const { data } = await supabase.from("orders").select("*, order_items(product_name, quantity, total_price, weight_kg)").eq("tenant_id", tenantId).gte("created_at", `${dateFilter}T00:00:00`).lte("created_at", `${dateFilter}T23:59:59`).order("created_at", { ascending: false });
+      setOrders((data as any) || []); setLoading(false);
+    };
+    fetchOrders();
+  }, [tenantId, dateFilter]);
+
+  const filtered = orders.filter((o) => (o.customer_name || "").toLowerCase().includes(search.toLowerCase()) || o.id.includes(search));
+  const totalDay = filtered.reduce((sum, o) => sum + Number(o.total), 0);
+
   return (
-    <div className="p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Vendas</h1>
-        <p className="text-muted-foreground">Histórico de vendas</p>
+    <div className="p-6 lg:p-8 space-y-6 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div><h1 className="text-2xl font-bold text-foreground">Vendas</h1><p className="text-muted-foreground mt-1">{filtered.length} vendas — Total: R$ {totalDay.toFixed(2)}</p></div>
+        <Input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="w-auto" />
       </div>
-
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Buscar venda..." className="pl-9" />
-        </div>
-        <Button variant="outline" className="gap-2"><Calendar className="w-4 h-4" /> Filtrar data</Button>
-      </div>
-
-      <Card className="shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <Receipt className="w-4 h-4 text-primary" />
-            {sales.length} vendas hoje
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-muted-foreground">
-                  <th className="text-left pb-3 font-medium">#</th>
-                  <th className="text-left pb-3 font-medium">Data/Hora</th>
-                  <th className="text-left pb-3 font-medium">Vendedor</th>
-                  <th className="text-center pb-3 font-medium">Itens</th>
-                  <th className="text-left pb-3 font-medium">Pagamento</th>
-                  <th className="text-right pb-3 font-medium">Total</th>
-                  <th className="text-right pb-3 font-medium">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sales.map((s, i) => (
-                  <motion.tr
-                    key={s.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: i * 0.03 }}
-                    className="border-b border-border/50 hover:bg-muted/30 transition-colors"
-                  >
-                    <td className="py-3 font-mono text-muted-foreground">#{String(s.id).padStart(4, "0")}</td>
-                    <td className="py-3 text-muted-foreground">{s.date}</td>
-                    <td className="py-3 text-foreground">{s.user}</td>
-                    <td className="py-3 text-center">{s.items}</td>
-                    <td className="py-3">
-                      <Badge variant="secondary" className={paymentColor[s.payment] || ""}>{s.payment}</Badge>
-                    </td>
-                    <td className="py-3 text-right font-semibold text-foreground">R$ {s.total.toFixed(2).replace(".", ",")}</td>
-                    <td className="py-3 text-right">
-                      <Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="w-4 h-4" /></Button>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="relative max-w-sm"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
+      <Card><CardContent className="p-0"><Table><TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Horário</TableHead><TableHead>Itens</TableHead><TableHead>Pagamento</TableHead><TableHead>Cliente</TableHead><TableHead className="text-right">Total</TableHead></TableRow></TableHeader>
+        <TableBody>{filtered.map((o) => (
+          <TableRow key={o.id}>
+            <TableCell className="font-mono text-xs text-muted-foreground">#{o.id.slice(0, 6)}</TableCell>
+            <TableCell className="text-sm">{format(new Date(o.created_at), "HH:mm", { locale: ptBR })}</TableCell>
+            <TableCell><div className="space-y-0.5">{o.order_items.map((item, i) => <p key={i} className="text-xs text-muted-foreground">{item.weight_kg ? `${item.weight_kg}kg` : `${item.quantity}x`} {item.product_name}</p>)}</div></TableCell>
+            <TableCell><Badge variant="outline">{pmLabels[o.payment_method] || o.payment_method}</Badge></TableCell>
+            <TableCell className="text-muted-foreground">{o.customer_name || "—"}</TableCell>
+            <TableCell className="text-right font-semibold">R$ {Number(o.total).toFixed(2)}</TableCell>
+          </TableRow>
+        ))}{filtered.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">{loading ? "Carregando..." : "Nenhuma venda encontrada"}</TableCell></TableRow>}</TableBody>
+      </Table></CardContent></Card>
     </div>
   );
 }
