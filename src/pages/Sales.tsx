@@ -50,9 +50,26 @@ export default function Sales() {
             <TableCell><Badge variant="outline">{pmLabels[o.payment_method] || o.payment_method}</Badge></TableCell>
             <TableCell className="text-muted-foreground">{o.customer_name || "—"}</TableCell>
             <TableCell className="text-right font-semibold">R$ {Number(o.total).toFixed(2)}</TableCell>
+            <TableCell><Button variant="ghost" size="icon" onClick={() => setReceiptOrder(o)} title="Ver recibo"><Receipt className="w-4 h-4" /></Button></TableCell>
           </TableRow>
-        ))}{filtered.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">{loading ? "Carregando..." : "Nenhuma venda encontrada"}</TableCell></TableRow>}</TableBody>
+        ))}{filtered.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">{loading ? "Carregando..." : "Nenhuma venda encontrada"}</TableCell></TableRow>}</TableBody>
       </Table></CardContent></Card>
+
+      <ReceiptDialog
+        open={!!receiptOrder}
+        onOpenChange={(o) => !o && setReceiptOrder(null)}
+        data={receiptOrder ? {
+          id: receiptOrder.id,
+          order_number: receiptOrder.order_number,
+          created_at: receiptOrder.created_at,
+          subtotal: receiptOrder.subtotal,
+          discount: receiptOrder.discount,
+          total: receiptOrder.total,
+          payment_method: receiptOrder.payment_method,
+          customer_name: receiptOrder.customer_name,
+          items: receiptOrder.order_items.map(i => ({ product_name: i.product_name, quantity: i.quantity, unit_price: i.unit_price, total_price: i.total_price, weight_kg: i.weight_kg })),
+        } : null}
+      />
     </div>
   );
 }
