@@ -62,6 +62,12 @@ const App = () => (
               <Route path="/admin/users" element={<AdminUsers />} />
             </Route>
 
+            {/* Owner routes */}
+            <Route element={<ProtectedRoute requiredRole="owner"><OwnerLayout /></ProtectedRoute>}>
+              <Route path="/owner" element={<OwnerDashboard />} />
+              <Route path="/owner/stores" element={<OwnerStores />} />
+            </Route>
+
             <Route path="/setup" element={<SetupAdmin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
