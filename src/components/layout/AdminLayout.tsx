@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import {
   LayoutDashboard, Building2, CreditCard, Users, LogOut,
-  ChevronLeft, ChevronRight, Shield
+  ChevronLeft, ChevronRight, Shield, Store
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
