@@ -97,13 +97,13 @@ export default function Sidebar() {
           {collapsed ? <ChevronRight className="w-5 h-5 shrink-0" /> : <ChevronLeft className="w-5 h-5 shrink-0" />}
           {!collapsed && <span>Recolher</span>}
         </button>
-        <NavLink
-          to="/"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/50 hover:text-destructive hover:bg-sidebar-accent transition-colors"
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/50 hover:text-destructive hover:bg-sidebar-accent transition-colors"
         >
           <LogOut className="w-5 h-5 shrink-0" />
           {!collapsed && <span>Sair</span>}
-        </NavLink>
+        </button>
       </div>
     </motion.aside>
   );
