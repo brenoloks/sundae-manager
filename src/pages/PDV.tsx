@@ -101,6 +101,12 @@ export default function PDV() {
       const { error: itemsError } = await supabase.from("order_items").insert(items);
       if (itemsError) throw itemsError;
       for (const item of cart) { if (item.product.unit !== "kg") { await supabase.from("products").update({ stock: Math.max(0, item.product.stock - item.quantity) }).eq("id", item.product.id); } }
+      setReceiptData({
+        id: order.id, created_at: new Date().toISOString(), subtotal, discount: discountValue, total,
+        payment_method: paymentMethod, customer_name: customerName || null,
+        items: items.map((it: any) => ({ product_name: it.product_name, quantity: it.quantity, unit_price: it.unit_price, total_price: it.total_price, weight_kg: it.weight_kg })),
+      });
+      setReceiptOpen(true);
       toast.success(`Venda finalizada! Total: R$ ${total.toFixed(2)}`);
       setCart([]); setDiscount(""); setCustomerName(""); setCheckoutOpen(false);
       const { data: updated } = await supabase.from("products").select("*, categories(name, color)").eq("tenant_id", tenantId).eq("is_active", true).order("name");
