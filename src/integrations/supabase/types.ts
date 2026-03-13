@@ -20,12 +20,16 @@ export type Database = {
           description: string | null
           features: Json | null
           id: string
+          included_stores: number
           is_active: boolean
           max_products: number
           max_users: number
           name: string
           price_monthly: number
+          price_per_extra_gb: number
+          price_per_extra_store: number
           price_yearly: number
+          storage_limit_gb: number
           updated_at: string
         }
         Insert: {
@@ -33,12 +37,16 @@ export type Database = {
           description?: string | null
           features?: Json | null
           id?: string
+          included_stores?: number
           is_active?: boolean
           max_products?: number
           max_users?: number
           name: string
           price_monthly?: number
+          price_per_extra_gb?: number
+          price_per_extra_store?: number
           price_yearly?: number
+          storage_limit_gb?: number
           updated_at?: string
         }
         Update: {
@@ -46,12 +54,16 @@ export type Database = {
           description?: string | null
           features?: Json | null
           id?: string
+          included_stores?: number
           is_active?: boolean
           max_products?: number
           max_users?: number
           name?: string
           price_monthly?: number
+          price_per_extra_gb?: number
+          price_per_extra_store?: number
           price_yearly?: number
+          storage_limit_gb?: number
           updated_at?: string
         }
         Relationships: []
@@ -62,6 +74,7 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          store_id: string | null
           tenant_id: string | null
           updated_at: string
         }
@@ -70,6 +83,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id: string
+          store_id?: string | null
           tenant_id?: string | null
           updated_at?: string
         }
@@ -78,12 +92,70 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          store_id?: string | null
           tenant_id?: string | null
           updated_at?: string
         }
         Relationships: [
           {
+            foreignKeyName: "profiles_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "profiles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stores: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          phone: string | null
+          slug: string
+          state: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          phone?: string | null
+          slug: string
+          state?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone?: string | null
+          slug?: string
+          state?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stores_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -97,6 +169,8 @@ export type Database = {
           created_at: string
           current_period_end: string
           current_period_start: string
+          extra_storage_gb: number
+          extra_stores: number
           id: string
           plan_id: string
           status: string
@@ -108,6 +182,8 @@ export type Database = {
           created_at?: string
           current_period_end?: string
           current_period_start?: string
+          extra_storage_gb?: number
+          extra_stores?: number
           id?: string
           plan_id: string
           status?: string
@@ -119,6 +195,8 @@ export type Database = {
           created_at?: string
           current_period_end?: string
           current_period_start?: string
+          extra_storage_gb?: number
+          extra_stores?: number
           id?: string
           plan_id?: string
           status?: string
@@ -233,7 +311,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "super_admin" | "admin" | "manager" | "cashier"
+      app_role: "super_admin" | "admin" | "manager" | "cashier" | "owner"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -361,7 +439,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["super_admin", "admin", "manager", "cashier"],
+      app_role: ["super_admin", "admin", "manager", "cashier", "owner"],
     },
   },
 } as const
